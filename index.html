@@ -5,78 +5,172 @@
   <meta charset="UTF-8" />
   <title>Schweden Roadtrip 2026 - A4 Poster</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 
 <body>
 
-  <!-- 1-Click Print & Save Button -->
-  <button class="print-btn" onclick="window.print()">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-      stroke-linecap="round" stroke-linejoin="round">
-      <path d="M6 9V2h12v7"></path>
-      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-      <rect x="6" y="14" width="12" height="8"></rect>
+  <!-- App Header Title (Top Left) -->
+  <div class="app-header-brand">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+      <polyline points="2 17 12 22 22 17"></polyline>
+      <polyline points="2 12 12 17 22 12"></polyline>
     </svg>
-    Save as A4 Poster
-  </button>
+    <span data-i18n="app_title">Reiseposter Ersteller</span>
+  </div>
+
+  <!-- Top Action Toolbar -->
+  <div class="top-toolbar">
+    <div class="language-toggle-container">
+      <span class="toggle-lang-label" id="lang-de-label">DE</span>
+      <label class="switch">
+        <input type="checkbox" id="language-toggle">
+        <span class="slider round"></span>
+      </label>
+      <span class="toggle-lang-label" id="lang-en-label">EN</span>
+    </div>
+    <button class="btn btn-secondary" id="toggle-editor-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 20h9"></path>
+        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+      </svg>
+      <span data-i18n="manage_btn">Stationen & Poster verwalten</span>
+    </button>
+    <button class="btn btn-secondary" id="save-session-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+        <polyline points="7 3 7 8 15 8"></polyline>
+      </svg>
+      <span id="save-session-btn-text" data-i18n="save_session_btn">Session speichern</span>
+    </button>
+    <button class="btn btn-primary" onclick="printPoster()" id="save-poster-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 9V2h12v7"></path>
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+        <rect x="6" y="14" width="12" height="8"></rect>
+      </svg>
+      <span id="save-btn-text" data-i18n="save_btn">Poster speichern / drucken</span>
+    </button>
+  </div>
+
+  <!-- Collapsible Station Management Drawer Sidebar -->
+  <div class="editor-sidebar" id="editor-sidebar">
+    <div class="sidebar-header">
+      <h2 data-i18n="sidebar_title">Stationen-Manager</h2>
+      <button class="close-sidebar-btn" id="close-sidebar-btn">&times;</button>
+    </div>
+
+    <!-- Poster Customizer & Size Selection -->
+    <div class="sidebar-section">
+      <label class="section-label" data-i18n="dimensions_label">Poster-Format & Größe</label>
+      <select id="poster-size-select" class="sidebar-input sidebar-select">
+        <option value="a4" data-width="210mm" data-height="297mm" data-name="A4 Poster (210 × 297 mm)" selected>A4 Hochformat (210 × 297 mm)</option>
+        <option value="a3" data-width="297mm" data-height="420mm" data-name="A3 Poster (297 × 420 mm)">A3 Hochformat (297 × 420 mm)</option>
+        <option value="a5" data-width="148mm" data-height="210mm" data-name="A5 Print (148 × 210 mm)">A5 Minidruck (148 × 210 mm)</option>
+
+        <option value="square-small" data-width="210mm" data-height="210mm" data-name="Square Art (210 × 210 mm)">Quadratisch (210 × 210 mm)</option>
+        <option value="square-large" data-width="297mm" data-height="297mm" data-name="Square Wall Art (297 × 297 mm)">Quadratisch Groß (297 × 297 mm)</option>
+      </select>
+
+      <label class="section-label" style="margin-top: 10px;" data-i18n="poster_header_label">Poster-Überschrift</label>
+      <input type="text" id="poster-title-input" class="sidebar-input" value="Schweden Reise" placeholder="Titel (z.B. Schweden Reise)">
+      <input type="text" id="poster-subtitle-input" class="sidebar-input" value="Sommer 2026" placeholder="Untertitel (z.B. Sommer 2026)">
+    </div>
+
+    <!-- Map Aesthetics & Color Grading -->
+    <div class="sidebar-section">
+      <div class="aesthetic-header" id="toggle-aesthetic-menu">
+        <label class="section-label" style="margin-bottom:0;" data-i18n="map_aesthetic_label">Karten-Farben & Optik</label>
+        <button class="btn-preset-reset" id="reset-aesthetic-btn" title="Auf Standard-Farben zurücksetzen" data-i18n="aesthetic_reset_btn">Standard</button>
+      </div>
+
+      <div class="aesthetic-controls-body">
+        <div class="slider-control-row">
+          <div class="slider-label-row">
+            <span data-i18n="slider_saturation">Farbsättigung</span>
+            <span id="val-saturation" class="slider-val">130%</span>
+          </div>
+          <input type="range" id="slider-saturation" min="50" max="220" value="130" class="aesthetic-slider">
+        </div>
+
+        <div class="slider-control-row">
+          <div class="slider-label-row">
+            <span data-i18n="slider_contrast">Kontrast</span>
+            <span id="val-contrast" class="slider-val">108%</span>
+          </div>
+          <input type="range" id="slider-contrast" min="70" max="140" value="108" class="aesthetic-slider">
+        </div>
+
+        <div class="slider-control-row">
+          <div class="slider-label-row">
+            <span data-i18n="slider_brightness">Helligkeit</span>
+            <span id="val-brightness" class="slider-val">102%</span>
+          </div>
+          <input type="range" id="slider-brightness" min="80" max="125" value="102" class="aesthetic-slider">
+        </div>
+
+        <div class="slider-control-row">
+          <div class="slider-label-row">
+            <span data-i18n="slider_relief">Relief / Gelände</span>
+            <span id="val-relief" class="slider-val">45%</span>
+          </div>
+          <input type="range" id="slider-relief" min="0" max="100" value="45" class="aesthetic-slider">
+        </div>
+
+        <!-- Quick Color Presets -->
+        <div class="preset-pill-group">
+          <button class="preset-pill active" data-preset="vibrant" data-i18n="preset_vibrant">Lebendig</button>
+          <button class="preset-pill" data-preset="natural" data-i18n="preset_natural">Natürlich</button>
+          <button class="preset-pill" data-preset="pastel" data-i18n="preset_pastel">Sanft</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Location Search Box -->
+    <div class="sidebar-section">
+      <label class="section-label" data-i18n="search_label">Station suchen & hinzufügen</label>
+      <div class="search-box">
+        <input type="text" id="location-search-input" class="sidebar-input" placeholder="Stadt oder Ort eingeben...">
+        <button class="btn-search" id="search-btn" data-i18n="search_btn">Suchen</button>
+      </div>
+      <div id="search-results-dropdown" class="search-results-dropdown"></div>
+      <button class="btn-pick-map" id="pick-map-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 8v8M8 12h8"></path>
+        </svg>
+        <span id="pick-map-btn-text" data-i18n="pick_map_btn">Auf Karte klicken um Ort zu wählen</span>
+      </button>
+    </div>
+
+    <!-- Station List -->
+    <div class="sidebar-section sidebar-section-stations">
+      <div class="station-section-header">
+        <label class="section-label"><span data-i18n="route_stations_label">Routen-Stationen</span> (<span id="station-count">0</span>)</label>
+        <button class="btn-text-danger" id="reset-default-btn" data-i18n="reset_btn">Alle löschen</button>
+      </div>
+      <div class="station-list" id="station-list"></div>
+    </div>
+  </div>
 
   <div class="page-container">
     <div class="map-border"></div>
 
     <div class="title-card">
-      <h1>Schweden Reise</h1>
-      <p>Sommer 2026</p>
+      <h1 id="display-poster-title">Schweden Reise</h1>
+      <p id="display-poster-subtitle">Sommer 2026</p>
     </div>
 
     <div id="map"></div>
 
     <div class="legend-card">
-      <h2>Stationen</h2>
-      <div class="stop-row"><span class="badge" style="background:#2f855a;">S</span>
-        <div class="stop-details"><strong>Flensburg (D)</strong><br><span class="stop-dates">Start</span></div>
-      </div>
-      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">1</span>
-        <div class="stop-details"><strong>Hillerød Camping (DK)</strong><br><span class="stop-dates">18.07. –
-            20.07.</span></div>
-      </div>
-      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">2</span>
-        <div class="stop-details"><strong>Hjo Camping (Vättern)</strong><br><span class="stop-dates">20.07. –
-            22.07.</span></div>
-      </div>
-      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">3</span>
-        <div class="stop-details"><strong>Karlstad Swecamp</strong><br><span class="stop-dates">22.07. – 25.07.</span>
-        </div>
-      </div>
-      <div class="stop-row"><span class="badge" style="background:#c53030;">4</span>
-        <div class="stop-details"><strong>Östersund Camping</strong><br><span class="stop-dates">25.07. – 28.07.
-            (Norden)</span></div>
-      </div>
-      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">5</span>
-        <div class="stop-details"><strong>Sälstens Camping (Härnösand)</strong><br><span class="stop-dates">28.07. –
-            30.07.</span></div>
-      </div>
-      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">6</span>
-        <div class="stop-details"><strong>Camping Gävle</strong><br><span class="stop-dates">30.07. – 01.08.</span>
-        </div>
-      </div>
-      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">7</span>
-        <div class="stop-details"><strong>Bredäng Stockholm</strong><br><span class="stop-dates">01.08. – 04.08.</span>
-        </div>
-      </div>
-      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">8</span>
-        <div class="stop-details"><strong>Saxnäs Camping (Öland)</strong><br><span class="stop-dates">04.08. –
-            06.08.</span></div>
-      </div>
-      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">9</span>
-        <div class="stop-details"><strong>First Camp Malmö-Sibbarp</strong><br><span class="stop-dates">06.08. –
-            08.08.</span></div>
-      </div>
-      <div class="stop-row"><span class="badge" style="background:#dd6b20;">Z</span>
-        <div class="stop-details"><strong>Scharnebeck (D)</strong><br><span class="stop-dates">Rückreise / Ziel</span>
-        </div>
-      </div>
+      <h2 data-i18n="legend_header">STATIONEN</h2>
+      <div id="legend-list"></div>
     </div>
   </div>
 
