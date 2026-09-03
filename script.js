@@ -551,9 +551,14 @@ function initSidebarControls() {
     const name = selectedOption.dataset.name;
     const sizeVal = sizeSelect.value;
 
-    // Update screen canvas dimensions
-    pageContainer.style.width = width;
-    pageContainer.style.height = height;
+    const wVal = parseFloat(width);
+    const hVal = parseFloat(height);
+    const aspect = wVal / hVal;
+
+    // Update screen canvas aspect ratio & print size variables
+    pageContainer.style.setProperty('--poster-aspect', aspect);
+    pageContainer.style.setProperty('--poster-width', width);
+    pageContainer.style.setProperty('--poster-height', height);
 
     // Update print @page size rule dynamically
     if (sizeVal.startsWith('square')) {

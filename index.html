@@ -13,50 +13,51 @@
 
 <body>
 
-  <!-- App Header Title (Top Left) -->
-  <div class="app-header-brand">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-      <polyline points="2 17 12 22 22 17"></polyline>
-      <polyline points="2 12 12 17 22 12"></polyline>
-    </svg>
-    <span data-i18n="app_title">Reiseposter Ersteller</span>
-  </div>
-
-  <!-- Top Action Toolbar -->
-  <div class="top-toolbar">
-    <div class="language-toggle-container">
-      <span class="toggle-lang-label" id="lang-de-label">DE</span>
-      <label class="switch">
-        <input type="checkbox" id="language-toggle">
-        <span class="slider round"></span>
-      </label>
-      <span class="toggle-lang-label" id="lang-en-label">EN</span>
+  <!-- Top App Navigation Bar -->
+  <header class="app-top-navbar">
+    <div class="app-header-brand">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+        <polyline points="2 17 12 22 22 17"></polyline>
+        <polyline points="2 12 12 17 22 12"></polyline>
+      </svg>
+      <span data-i18n="app_title">Reiseposter Ersteller</span>
     </div>
-    <button class="btn btn-secondary" id="toggle-editor-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 20h9"></path>
-        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-      </svg>
-      <span data-i18n="manage_btn">Stationen & Poster verwalten</span>
-    </button>
-    <button class="btn btn-secondary" id="save-session-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-        <polyline points="17 21 17 13 7 13 7 21"></polyline>
-        <polyline points="7 3 7 8 15 8"></polyline>
-      </svg>
-      <span id="save-session-btn-text" data-i18n="save_session_btn">Session speichern</span>
-    </button>
-    <button class="btn btn-primary" onclick="printPoster()" id="save-poster-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 9V2h12v7"></path>
-        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-        <rect x="6" y="14" width="12" height="8"></rect>
-      </svg>
-      <span id="save-btn-text" data-i18n="save_btn">Poster speichern / drucken</span>
-    </button>
-  </div>
+
+    <div class="top-toolbar">
+      <div class="language-toggle-container">
+        <span class="toggle-lang-label" id="lang-de-label">DE</span>
+        <label class="switch">
+          <input type="checkbox" id="language-toggle">
+          <span class="slider round"></span>
+        </label>
+        <span class="toggle-lang-label" id="lang-en-label">EN</span>
+      </div>
+      <button class="btn btn-secondary" id="toggle-editor-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"></path>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+        </svg>
+        <span data-i18n="manage_btn">Stationen & Poster verwalten</span>
+      </button>
+      <button class="btn btn-secondary" id="save-session-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        <span id="save-session-btn-text" data-i18n="save_session_btn">Session speichern</span>
+      </button>
+      <button class="btn btn-primary" onclick="printPoster()" id="save-poster-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9V2h12v7"></path>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+          <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+        <span id="save-btn-text" data-i18n="save_btn">Poster speichern / drucken</span>
+      </button>
+    </div>
+  </header>
 
   <!-- Collapsible Station Management Drawer Sidebar -->
   <div class="editor-sidebar" id="editor-sidebar">
@@ -158,21 +159,24 @@
     </div>
   </div>
 
-  <div class="page-container">
-    <div class="map-border"></div>
+  <!-- Main Poster Workspace -->
+  <main class="app-main-workspace">
+    <div class="page-container">
+      <div class="map-border"></div>
 
-    <div class="title-card">
-      <h1 id="display-poster-title">Schweden Reise</h1>
-      <p id="display-poster-subtitle">Sommer 2026</p>
+      <div class="title-card">
+        <h1 id="display-poster-title">Schweden Reise</h1>
+        <p id="display-poster-subtitle">Sommer 2026</p>
+      </div>
+
+      <div id="map"></div>
+
+      <div class="legend-card">
+        <h2 data-i18n="legend_header">STATIONEN</h2>
+        <div id="legend-list"></div>
+      </div>
     </div>
-
-    <div id="map"></div>
-
-    <div class="legend-card">
-      <h2 data-i18n="legend_header">STATIONEN</h2>
-      <div id="legend-list"></div>
-    </div>
-  </div>
+  </main>
 
   <script src="script.js"></script>
 </body>

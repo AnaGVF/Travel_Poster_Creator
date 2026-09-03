@@ -7,23 +7,54 @@
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
 }
-body {
+html, body {
+  width: 100vw;
+  height: 100vh;
   margin: 0;
   padding: 0;
+  overflow: hidden;
   background: #e2e8f0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   display: flex;
+  flex-direction: column;
+}
+
+/* Dedicated Top Navigation Header Bar */
+.app-top-navbar {
+  height: 60px;
+  min-height: 60px;
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  z-index: 9999;
+}
+
+.app-main-workspace {
+  flex: 1;
+  width: 100%;
+  height: calc(100vh - 60px);
+  display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  padding: 16px;
+  overflow: hidden;
 }
+
 .page-container {
-  width: 210mm;
-  height: 297mm;
+  height: calc(100vh - 92px);
+  max-height: calc(100vh - 92px);
+  aspect-ratio: var(--poster-aspect, 210 / 297);
+  max-width: calc(100vw - 32px);
   position: relative;
   background: #d4e6f4;
   box-shadow: 0 12px 35px rgba(0,0,0,0.2);
   overflow: hidden;
+  border-radius: 4px;
 }
 #map {
   width: 100%;
@@ -182,12 +213,8 @@ body {
 .pin-end { background: #dd6b20; }
 .pin-end::after { border-top-color: #dd6b20; }
 
-/* Top Left App Brand Header */
+/* Top App Navigation Header Items */
 .app-header-brand {
-  position: fixed;
-  top: 24px;
-  left: 24px;
-  z-index: 9999;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -195,8 +222,8 @@ body {
   color: #1e3a5f;
   padding: 0;
   font-weight: 800;
-  font-size: 20px;
-  letter-spacing: 1px;
+  font-size: 18px;
+  letter-spacing: 0.5px;
   box-shadow: none;
   border: none;
   text-transform: uppercase;
@@ -205,13 +232,9 @@ body {
   color: #2b6cb0;
 }
 
-/* Top Floating Action Toolbar */
 .top-toolbar {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
   display: flex;
+  align-items: center;
   gap: 12px;
 }
 
@@ -693,23 +716,34 @@ input:checked + .slider:before {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+  .app-top-navbar,
+  .top-toolbar,
+  .editor-sidebar,
+  .app-header-brand {
+    display: none !important;
+  }
+  .app-main-workspace {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+  }
   .page-container {
     box-shadow: none !important;
     margin: 0 !important;
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
+    width: var(--poster-width, 210mm) !important;
+    height: var(--poster-height, 297mm) !important;
+    max-width: none !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
   }
   .leaflet-tile-pane {
     image-rendering: -webkit-optimize-contrast !important;
     image-rendering: high-quality !important;
-  }
-  .top-toolbar,
-  .editor-sidebar,
-  .app-header-brand {
-    display: none !important;
   }
 }
 
