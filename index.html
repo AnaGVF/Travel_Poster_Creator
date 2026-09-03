@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Schweden Roadtrip 2026 - A4 Poster</title>
+  <title>Travel Poster Creator</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <link rel="stylesheet" href="style.css" />
@@ -16,7 +16,8 @@
   <!-- Top App Navigation Bar -->
   <header class="app-top-navbar">
     <div class="app-header-brand">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
         <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
         <polyline points="2 17 12 22 22 17"></polyline>
         <polyline points="2 12 12 17 22 12"></polyline>
@@ -34,14 +35,16 @@
         <span class="toggle-lang-label" id="lang-en-label">EN</span>
       </div>
       <button class="btn btn-secondary" id="toggle-editor-btn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 20h9"></path>
           <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
         </svg>
         <span data-i18n="manage_btn">Stationen & Poster verwalten</span>
       </button>
       <button class="btn btn-secondary" id="save-session-btn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
           <polyline points="17 21 17 13 7 13 7 21"></polyline>
           <polyline points="7 3 7 8 15 8"></polyline>
@@ -49,7 +52,8 @@
         <span id="save-session-btn-text" data-i18n="save_session_btn">Session speichern</span>
       </button>
       <button class="btn btn-primary" onclick="printPoster()" id="save-poster-btn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 9V2h12v7"></path>
           <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
           <rect x="6" y="14" width="12" height="8"></rect>
@@ -70,24 +74,33 @@
     <div class="sidebar-section">
       <label class="section-label" data-i18n="dimensions_label">Poster-Format & Größe</label>
       <select id="poster-size-select" class="sidebar-input sidebar-select">
-        <option value="a4" data-width="210mm" data-height="297mm" data-name="A4 Poster (210 × 297 mm)" selected>A4 Hochformat (210 × 297 mm)</option>
-        <option value="a3" data-width="297mm" data-height="420mm" data-name="A3 Poster (297 × 420 mm)">A3 Hochformat (297 × 420 mm)</option>
-        <option value="a5" data-width="148mm" data-height="210mm" data-name="A5 Print (148 × 210 mm)">A5 Minidruck (148 × 210 mm)</option>
+        <option value="a4" data-width="210mm" data-height="297mm" data-name="A4 Poster (210 × 297 mm)" selected>A4
+          Hochformat (210 × 297 mm)</option>
+        <option value="a3" data-width="297mm" data-height="420mm" data-name="A3 Poster (297 × 420 mm)">A3 Hochformat
+          (297 × 420 mm)</option>
+        <option value="a5" data-width="148mm" data-height="210mm" data-name="A5 Print (148 × 210 mm)">A5 Minidruck (148
+          × 210 mm)</option>
 
-        <option value="square-small" data-width="210mm" data-height="210mm" data-name="Square Art (210 × 210 mm)">Quadratisch (210 × 210 mm)</option>
-        <option value="square-large" data-width="297mm" data-height="297mm" data-name="Square Wall Art (297 × 297 mm)">Quadratisch Groß (297 × 297 mm)</option>
+        <option value="square-small" data-width="210mm" data-height="210mm" data-name="Square Art (210 × 210 mm)">
+          Quadratisch (210 × 210 mm)</option>
+        <option value="square-large" data-width="297mm" data-height="297mm" data-name="Square Wall Art (297 × 297 mm)">
+          Quadratisch Groß (297 × 297 mm)</option>
       </select>
 
       <label class="section-label" style="margin-top: 10px;" data-i18n="poster_header_label">Poster-Überschrift</label>
-      <input type="text" id="poster-title-input" class="sidebar-input" value="Schweden Reise" placeholder="Titel (z.B. Schweden Reise)">
-      <input type="text" id="poster-subtitle-input" class="sidebar-input" value="Sommer 2026" placeholder="Untertitel (z.B. Sommer 2026)">
+      <input type="text" id="poster-title-input" class="sidebar-input" value="Schweden Reise"
+        placeholder="Titel (z.B. Schweden Reise)">
+      <input type="text" id="poster-subtitle-input" class="sidebar-input" value="Sommer 2026"
+        placeholder="Untertitel (z.B. Sommer 2026)">
     </div>
 
     <!-- Map Aesthetics & Color Grading -->
     <div class="sidebar-section">
       <div class="aesthetic-header" id="toggle-aesthetic-menu">
-        <label class="section-label" style="margin-bottom:0;" data-i18n="map_aesthetic_label">Karten-Farben & Optik</label>
-        <button class="btn-preset-reset" id="reset-aesthetic-btn" title="Auf Standard-Farben zurücksetzen" data-i18n="aesthetic_reset_btn">Standard</button>
+        <label class="section-label" style="margin-bottom:0;" data-i18n="map_aesthetic_label">Karten-Farben &
+          Optik</label>
+        <button class="btn-preset-reset" id="reset-aesthetic-btn" title="Auf Standard-Farben zurücksetzen"
+          data-i18n="aesthetic_reset_btn">Standard</button>
       </div>
 
       <div class="aesthetic-controls-body">
@@ -152,7 +165,8 @@
     <!-- Station List -->
     <div class="sidebar-section sidebar-section-stations">
       <div class="station-section-header">
-        <label class="section-label"><span data-i18n="route_stations_label">Routen-Stationen</span> (<span id="station-count">0</span>)</label>
+        <label class="section-label"><span data-i18n="route_stations_label">Routen-Stationen</span> (<span
+            id="station-count">0</span>)</label>
         <button class="btn-text-danger" id="reset-default-btn" data-i18n="reset_btn">Alle löschen</button>
       </div>
       <div class="station-list" id="station-list"></div>
