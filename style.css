@@ -1,0 +1,193 @@
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+* {
+  box-sizing: border-box;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+body {
+  margin: 0;
+  padding: 0;
+  background: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.page-container {
+  width: 210mm;
+  height: 297mm;
+  position: relative;
+  background: #d4e6f4;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+#map {
+  width: 100%;
+  height: 100%;
+  background: #d4e6f4;
+}
+
+/* Outer decorative border for a framed print */
+.map-border {
+  position: absolute;
+  inset: 10mm;
+  border: 1.5px solid rgba(44, 62, 80, 0.35);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 1001;
+}
+
+/* Title Card (Top Left) */
+.title-card {
+  position: absolute;
+  top: 15mm;
+  left: 15mm;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  padding: 16px 22px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  border: 1px solid rgba(255,255,255,0.8);
+}
+.title-card h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #1e3a5f;
+  text-transform: uppercase;
+}
+.title-card p {
+  margin: 4px 0 0 0;
+  font-size: 12.5px;
+  letter-spacing: 1px;
+  color: #5a6a80;
+  font-weight: 600;
+}
+
+/* Slimmed Down Legend Card */
+.legend-card {
+  position: absolute;
+  bottom: 14mm;
+  right: 14mm;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 12px 14px;
+  border-radius: 10px;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.12);
+  width: 230px; /* Slimmer profile */
+  border: 1px solid rgba(255,255,255,0.8);
+}
+.legend-card h2 {
+  margin: 0 0 6px 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #2b6cb0;
+  text-transform: uppercase;
+  border-bottom: 1.5px solid #edf2f7;
+  padding-bottom: 4px;
+}
+.stop-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4.5px;
+  font-size: 10px;
+  color: #2d3748;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 800;
+  font-size: 9px;
+  margin-right: 7px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+.stop-details {
+  line-height: 1.18;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.stop-details strong {
+  font-size: 10px;
+}
+.stop-dates {
+  font-size: 8.5px;
+  color: #718096;
+}
+
+/* Pin Styling */
+.custom-div-icon {
+  background: transparent;
+  border: none;
+}
+.pin-bubble {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #2b6cb0;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 11px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+.pin-start { background: #2f855a; }
+.pin-north { background: #c53030; }
+.pin-end { background: #dd6b20; }
+
+/* Interactive Floating Print Button (Auto-hidden on print) */
+.print-btn {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  background: #2b6cb0;
+  color: #ffffff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(43, 108, 176, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+.print-btn:hover {
+  background: #2c5282;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(43, 108, 176, 0.5);
+}
+
+@media print {
+  body {
+    background: none;
+  }
+  .page-container {
+    box-shadow: none;
+    width: 100vw;
+    height: 100vh;
+  }
+  .print-btn {
+    display: none !important;
+  }
+}

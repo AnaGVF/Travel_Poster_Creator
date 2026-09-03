@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Schweden Roadtrip 2026 - A4 Poster</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+
+<body>
+
+  <!-- 1-Click Print & Save Button -->
+  <button class="print-btn" onclick="window.print()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 9V2h12v7"></path>
+      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+      <rect x="6" y="14" width="12" height="8"></rect>
+    </svg>
+    Save as A4 Poster
+  </button>
+
+  <div class="page-container">
+    <div class="map-border"></div>
+
+    <div class="title-card">
+      <h1>Schweden Reise</h1>
+      <p>Sommer 2026</p>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="legend-card">
+      <h2>Stationen</h2>
+      <div class="stop-row"><span class="badge" style="background:#2f855a;">S</span>
+        <div class="stop-details"><strong>Flensburg (D)</strong><br><span class="stop-dates">Start</span></div>
+      </div>
+      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">1</span>
+        <div class="stop-details"><strong>Hillerød Camping (DK)</strong><br><span class="stop-dates">18.07. –
+            20.07.</span></div>
+      </div>
+      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">2</span>
+        <div class="stop-details"><strong>Hjo Camping (Vättern)</strong><br><span class="stop-dates">20.07. –
+            22.07.</span></div>
+      </div>
+      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">3</span>
+        <div class="stop-details"><strong>Karlstad Swecamp</strong><br><span class="stop-dates">22.07. – 25.07.</span>
+        </div>
+      </div>
+      <div class="stop-row"><span class="badge" style="background:#c53030;">4</span>
+        <div class="stop-details"><strong>Östersund Camping</strong><br><span class="stop-dates">25.07. – 28.07.
+            (Norden)</span></div>
+      </div>
+      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">5</span>
+        <div class="stop-details"><strong>Sälstens Camping (Härnösand)</strong><br><span class="stop-dates">28.07. –
+            30.07.</span></div>
+      </div>
+      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">6</span>
+        <div class="stop-details"><strong>Camping Gävle</strong><br><span class="stop-dates">30.07. – 01.08.</span>
+        </div>
+      </div>
+      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">7</span>
+        <div class="stop-details"><strong>Bredäng Stockholm</strong><br><span class="stop-dates">01.08. – 04.08.</span>
+        </div>
+      </div>
+      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">8</span>
+        <div class="stop-details"><strong>Saxnäs Camping (Öland)</strong><br><span class="stop-dates">04.08. –
+            06.08.</span></div>
+      </div>
+      <div class="stop-row"><span class="badge" style="background:#2b6cb0;">9</span>
+        <div class="stop-details"><strong>First Camp Malmö-Sibbarp</strong><br><span class="stop-dates">06.08. –
+            08.08.</span></div>
+      </div>
+      <div class="stop-row"><span class="badge" style="background:#dd6b20;">Z</span>
+        <div class="stop-details"><strong>Scharnebeck (D)</strong><br><span class="stop-dates">Rückreise / Ziel</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
