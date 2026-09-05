@@ -21,6 +21,8 @@ Try the application directly in your browser:
 * **Non-Destructive Filtering**: Color grading applies strictly to the background map canvas, keeping station markers, route lines, titles, and legends crisp and readable.
 
 ### 📍 Route & Station Management
+* **Realistic Car Driving Routes**: Generates authentic road trip paths following real highways, motorways, curves, and bridges powered by the Open Source Routing Machine (OSRM).
+* **Route Style Options**: Seamlessly switch between **Fahrstrecke (Auto / Straßen) / Driving Route** and **Direktlinie (Luftlinie) / Direct Beeline**.
 * **Smart Balloon Station Markers**: Elevated teardrop pins with pointer tails that point precisely at coordinates without covering city labels (e.g., Stockholm, Karlstad).
 * **Global Location Search**: Search cities or landmarks worldwide powered by the Nominatim Geocoding API.
 * **Interactive Map Pinning**: Click anywhere directly on the map canvas to place new route stops.
@@ -45,6 +47,7 @@ Try the application directly in your browser:
 | :--- | :--- |
 | **Frontend Core** | HTML5, CSS3, JavaScript (Vanilla ES6) |
 | **Interactive Maps** | [Leaflet.js](https://leafletjs.com/) (v1.9.4) |
+| **Car Driving Routing** | [OSRM Routing API](https://project-osrm.org/) |
 | **Map Base Tiles** | [OpenStreetMap](https://www.openstreetmap.org/) & [OpenStreetMap DE](https://www.openstreetmap.de/) |
 | **Topographic Relief** | [Esri World Hillshade](https://www.esri.com/) |
 | **Geocoding & Search** | [Nominatim API](https://nominatim.org/) |

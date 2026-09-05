@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Travel Poster Creator</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2338bdf8'%3E%3Cpath d='M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <link rel="stylesheet" href="style.css" />
@@ -65,6 +66,7 @@
 
   <!-- Collapsible Station Management Drawer Sidebar -->
   <div class="editor-sidebar" id="editor-sidebar">
+    <div class="sidebar-resize-handle" id="sidebar-resize-handle" title="Drag to resize sidebar"></div>
     <div class="sidebar-header">
       <h2 data-i18n="sidebar_title">Stationen-Manager</h2>
       <button class="close-sidebar-btn" id="close-sidebar-btn">&times;</button>
@@ -92,6 +94,45 @@
         placeholder="Titel (z.B. Schweden Reise)">
       <input type="text" id="poster-subtitle-input" class="sidebar-input" value="Sommer 2026"
         placeholder="Untertitel (z.B. Sommer 2026)">
+
+      <label class="section-label" style="margin-top: 10px;" data-i18n="route_style_label">Routen-Stil</label>
+      <select id="route-style-select" class="sidebar-input sidebar-select">
+        <option value="driving" data-i18n="route_style_driving" selected>Fahrstrecke (Auto / Straßen)</option>
+        <option value="direct" data-i18n="route_style_direct">Direktlinie (Luftlinie)</option>
+      </select>
+
+      <div class="slider-control-row" style="margin-top: 12px;">
+        <div class="slider-label-row">
+          <span data-i18n="title_size_label">Titel-Box Größe</span>
+          <span id="val-title-scale" class="slider-val">100%</span>
+        </div>
+        <input type="range" id="slider-title-scale" min="70" max="160" value="100" class="aesthetic-slider">
+      </div>
+
+      <div class="slider-control-row" style="margin-top: 10px;">
+        <div class="slider-label-row">
+          <span data-i18n="legend_size_label">Stationen-Menü Größe</span>
+          <span id="val-legend-scale" class="slider-val">100%</span>
+        </div>
+        <input type="range" id="slider-legend-scale" min="70" max="140" value="100" class="aesthetic-slider">
+      </div>
+    </div>
+
+    <!-- Map Zoom & Framing -->
+    <div class="sidebar-section">
+      <div class="aesthetic-header">
+        <label class="section-label" style="margin-bottom:0;" data-i18n="map_zoom_section_label">Karten-Zoom & Ausschnitt</label>
+        <button class="btn-preset-reset" id="fit-route-btn" title="Ganze Route optimal im Poster einpassen"
+          data-i18n="fit_route_btn">Route einpassen</button>
+      </div>
+
+      <div class="slider-control-row" style="margin-top: 10px;">
+        <div class="slider-label-row">
+          <span data-i18n="slider_zoom">Zoomstufe</span>
+          <span id="val-map-zoom" class="slider-val">5.85x</span>
+        </div>
+        <input type="range" id="slider-map-zoom" min="4.5" max="12.5" step="0.05" value="5.85" class="aesthetic-slider">
+      </div>
     </div>
 
     <!-- Map Aesthetics & Color Grading -->
@@ -178,14 +219,16 @@
     <div class="page-container">
       <div class="map-border"></div>
 
-      <div class="title-card">
+      <div class="title-card" id="title-card">
+        <div class="title-resize-handle" id="title-resize-handle" title="Titel-Box durch Ziehen vergrößern / verkleinern"></div>
         <h1 id="display-poster-title">Schweden Reise</h1>
         <p id="display-poster-subtitle">Sommer 2026</p>
       </div>
 
       <div id="map"></div>
 
-      <div class="legend-card">
+      <div class="legend-card" id="legend-card">
+        <div class="legend-resize-handle" id="legend-resize-handle" title="Stationen-Box durch Ziehen vergrößern / verkleinern"></div>
         <h2 data-i18n="legend_header">STATIONEN</h2>
         <div id="legend-list"></div>
       </div>

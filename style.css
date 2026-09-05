@@ -82,7 +82,7 @@ html, body {
   z-index: 1001;
 }
 
-/* Title Card (Top Left) */
+/* Title Card (Top Left) with Dynamic Resizability */
 .title-card {
   position: absolute;
   top: 15mm;
@@ -90,28 +90,65 @@ html, body {
   z-index: 1000;
   background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(8px);
-  padding: 16px 22px;
+  padding: calc(16px * var(--title-scale, 1)) calc(22px * var(--title-scale, 1));
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.12);
   border: 1px solid rgba(255,255,255,0.8);
+  transition: box-shadow 0.2s ease;
 }
+
+.title-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.16);
+}
+
+/* Title card drag resize handle (bottom-right corner) */
+.title-resize-handle {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 22px;
+  height: 22px;
+  cursor: nwse-resize;
+  z-index: 1005;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  opacity: 0.35;
+  transition: opacity 0.2s ease;
+  padding: 2px;
+}
+
+.title-card:hover .title-resize-handle,
+.title-resize-handle.active {
+  opacity: 1;
+}
+
+.title-resize-handle::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-bottom: 3px solid #2b6cb0;
+  border-right: 3px solid #2b6cb0;
+  border-bottom-right-radius: 4px;
+}
+
 .title-card h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: calc(24px * var(--title-scale, 1));
   font-weight: 800;
-  letter-spacing: 2px;
+  letter-spacing: calc(2px * var(--title-scale, 1));
   color: #1e3a5f;
   text-transform: uppercase;
 }
 .title-card p {
-  margin: 4px 0 0 0;
-  font-size: 12.5px;
-  letter-spacing: 1px;
+  margin: calc(4px * var(--title-scale, 1)) 0 0 0;
+  font-size: calc(12.5px * var(--title-scale, 1));
+  letter-spacing: calc(1px * var(--title-scale, 1));
   color: #5a6a80;
   font-weight: 600;
 }
 
-/* Slimmed Down Legend Card */
+/* Slimmed Down Legend Card with Dynamic Resizability */
 .legend-card {
   position: absolute;
   bottom: 14mm;
@@ -119,40 +156,87 @@ html, body {
   z-index: 1000;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
-  padding: 12px 14px;
+  padding: calc(12px * var(--legend-scale, 1)) calc(14px * var(--legend-scale, 1));
   border-radius: 10px;
   box-shadow: 0 6px 22px rgba(0,0,0,0.12);
-  width: 230px; /* Slimmer profile */
+  width: var(--legend-width, 230px);
+  min-width: 160px;
+  max-width: 520px;
   border: 1px solid rgba(255,255,255,0.8);
+  transition: box-shadow 0.2s ease;
 }
+
+.legend-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.16);
+}
+
+/* Legend card drag resize handle (top-left corner) */
+.legend-resize-handle {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 22px;
+  height: 22px;
+  cursor: nwse-resize;
+  z-index: 1005;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  opacity: 0.35;
+  transition: opacity 0.2s ease;
+  padding: 2px;
+}
+
+.legend-card:hover .legend-resize-handle,
+.legend-resize-handle.active {
+  opacity: 1;
+}
+
+.legend-resize-handle::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-top: 3px solid #2b6cb0;
+  border-left: 3px solid #2b6cb0;
+  border-top-left-radius: 4px;
+}
+
 .legend-card h2 {
-  margin: 0 0 6px 0;
-  font-size: 12px;
+  margin: 0 0 calc(6px * var(--legend-scale, 1)) 0;
+  font-size: calc(12px * var(--legend-scale, 1));
   font-weight: 800;
   letter-spacing: 1.5px;
   color: #2b6cb0;
   text-transform: uppercase;
   border-bottom: 1.5px solid #edf2f7;
-  padding-bottom: 4px;
+  padding-bottom: calc(4px * var(--legend-scale, 1));
 }
+
+/* Multi-column grid when legend card is widened */
+.legend-card.multi-column #legend-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 12px;
+}
+
 .stop-row {
   display: flex;
   align-items: center;
-  margin-bottom: 4.5px;
-  font-size: 10px;
+  margin-bottom: calc(4.5px * var(--legend-scale, 1));
+  font-size: calc(10px * var(--legend-scale, 1));
   color: #2d3748;
 }
 .badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 17px;
-  height: 17px;
+  width: calc(17px * var(--legend-scale, 1));
+  height: calc(17px * var(--legend-scale, 1));
   border-radius: 50%;
   color: #fff;
   font-weight: 800;
-  font-size: 9px;
-  margin-right: 7px;
+  font-size: calc(9px * var(--legend-scale, 1));
+  margin-right: calc(7px * var(--legend-scale, 1));
   flex-shrink: 0;
   box-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
@@ -163,10 +247,10 @@ html, body {
   text-overflow: ellipsis;
 }
 .stop-details strong {
-  font-size: 10px;
+  font-size: calc(10px * var(--legend-scale, 1));
 }
 .stop-dates {
-  font-size: 8.5px;
+  font-size: calc(8.5px * var(--legend-scale, 1));
   color: #718096;
 }
 
@@ -271,12 +355,14 @@ html, body {
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
 }
 
-/* Sidebar Drawer Panel */
+/* Sidebar Drawer Panel with Resizability */
 .editor-sidebar {
   position: fixed;
   top: 0;
-  left: -380px;
-  width: 360px;
+  left: calc(-1 * var(--sidebar-width, 360px) - 30px);
+  width: var(--sidebar-width, 360px);
+  min-width: 280px;
+  max-width: 650px;
   height: 100vh;
   background: #ffffff;
   box-shadow: 6px 0 25px rgba(0, 0, 0, 0.18);
@@ -286,6 +372,27 @@ html, body {
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 13px;
   color: #2d3748;
+}
+
+.editor-sidebar.resizing {
+  transition: none !important;
+  user-select: none;
+}
+
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -5px;
+  width: 10px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 10005;
+  transition: background 0.2s ease;
+}
+
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle.active {
+  background: rgba(43, 108, 176, 0.35);
 }
 
 .editor-sidebar.active {
@@ -708,13 +815,50 @@ input:checked + .slider:before {
   image-rendering: -webkit-optimize-contrast;
 }
 
+/* Print Preparation Mode (Triggered before window.print) */
+body.preparing-print {
+  overflow: visible !important;
+}
+
+body.preparing-print .app-main-workspace {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+  display: block !important;
+}
+
+body.preparing-print .page-container {
+  width: var(--poster-width, 210mm) !important;
+  height: var(--poster-height, 297mm) !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  position: relative !important;
+  margin: 0 auto !important;
+}
+
+body.preparing-print #map {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 @media print {
+  @page {
+    margin: 0 !important;
+  }
   html, body {
     margin: 0 !important;
     padding: 0 !important;
-    background: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    overflow: hidden !important;
   }
   .app-top-navbar,
   .top-toolbar,
@@ -728,6 +872,7 @@ input:checked + .slider:before {
     width: 100% !important;
     height: 100% !important;
     display: block !important;
+    overflow: visible !important;
   }
   .page-container {
     box-shadow: none !important;
@@ -740,10 +885,32 @@ input:checked + .slider:before {
     max-width: none !important;
     max-height: none !important;
     aspect-ratio: auto !important;
+    border-radius: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    background: #cbe0f0 !important;
+  }
+  #map {
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute !important;
+    inset: 0 !important;
+  }
+  .map-border {
+    position: absolute !important;
+    inset: 5mm !important;
+    border: 1.5px solid rgba(44, 62, 80, 0.35) !important;
+    border-radius: 6px !important;
+    z-index: 1001 !important;
   }
   .leaflet-tile-pane {
     image-rendering: -webkit-optimize-contrast !important;
     image-rendering: high-quality !important;
+  }
+  .legend-resize-handle,
+  .sidebar-resize-handle,
+  .title-resize-handle {
+    display: none !important;
   }
 }
 

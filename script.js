@@ -31,6 +31,13 @@ const PRESETS = {
 let stations = JSON.parse(JSON.stringify(INITIAL_STATIONS));
 let mapAesthetics = { ...DEFAULT_AESTHETICS };
 let currentLang = 'de'; // 'de' or 'en'
+let routeStyle = 'driving'; // 'driving' or 'direct'
+let titleScale = 100; // in percent (70 to 160)
+let legendScale = 100; // in percent (70 to 140)
+let legendWidth = 230; // in px (160 to 520)
+let sidebarWidth = 360; // in px (280 to 650)
+const routeCache = new Map();
+let currentRouteRequestId = 0;
 let map, outerPolyline, innerPolyline;
 let markers = [];
 let isPickingMapLocation = false;
@@ -40,10 +47,155 @@ let currentSearchResults = [];
 document.addEventListener("DOMContentLoaded", () => {
   initMap();
   initSidebarControls();
-  loadSavedSession();
+  initTitleResize();
+  initLegendResize();
+  initSidebarResize();
+  const hasSavedState = loadSavedSession();
   applyMapAesthetics();
-  renderPoster();
+  applyTitleScale(titleScale);
+  applyLegendScale(legendScale);
+  applyLegendWidth(legendWidth);
+  applySidebarWidth(sidebarWidth);
+  renderPoster(!hasSavedState);
 });
+
+function getRouteCacheKey(stationList) {
+  return stationList.map(s => `${s.coords[0].toFixed(5)},${s.coords[1].toFixed(5)}`).join(';');
+}
+
+function routeHasFerry(route) {
+  if (!route || !route.legs) return false;
+  for (const leg of route.legs) {
+    if (leg.steps) {
+      for (const step of leg.steps) {
+        if (step.mode === 'ferry' || step.maneuver?.type === 'ferry') {
+          return true;
+        }
+        const stepName = (step.name || '').toLowerCase();
+        if (stepName.includes('ferry') || stepName.includes('fähre') || stepName.includes('færge') || stepName.includes('färja')) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+async function queryOSRM(coordList) {
+  try {
+    const coordsStr = coordList.map(c => `${c[1]},${c[0]}`).join(';');
+    const url = `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&steps=true&geometries=geojson`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.code === 'Ok' && data.routes && data.routes[0]) {
+      return data.routes[0];
+    }
+  } catch (e) {
+    // Network or parse failure
+  }
+  return null;
+}
+
+function offsetLeg(coords, offsetDist = 0.0024) {
+  if (!coords || coords.length < 2) return coords;
+  const n = coords.length;
+  const result = [];
+
+  for (let i = 0; i < n; i++) {
+    const lat = coords[i][0];
+    const lng = coords[i][1];
+
+    let prevIdx = Math.max(0, i - 1);
+    let nextIdx = Math.min(n - 1, i + 1);
+
+    while (prevIdx > 0 && coords[prevIdx][0] === lat && coords[prevIdx][1] === lng) prevIdx--;
+    while (nextIdx < n - 1 && coords[nextIdx][0] === lat && coords[nextIdx][1] === lng) nextIdx++;
+
+    const cosLat = Math.cos((lat * Math.PI) / 180);
+    const dLat = coords[nextIdx][0] - coords[prevIdx][0];
+    const dLng = (coords[nextIdx][1] - coords[prevIdx][1]) * cosLat;
+    const len = Math.sqrt(dLat * dLat + dLng * dLng);
+
+    if (len === 0) {
+      result.push([lat, lng]);
+      continue;
+    }
+
+    // Perpendicular vector (normal to the right in driving direction)
+    const nLat = -dLng / len;
+    const nLng = (dLat / len) / cosLat;
+
+    // Smooth tapering near the start and end of each leg so lines attach right to the marker tail
+    let taper = 1.0;
+    if (i < 5) taper = i / 5;
+    else if (i >= n - 5) taper = (n - 1 - i) / 5;
+
+    const offset = offsetDist * taper;
+    result.push([lat + nLat * offset, lng + nLng * offset]);
+  }
+
+  return result;
+}
+
+async function fetchDrivingRoute(stationCoords) {
+  if (!stationCoords || stationCoords.length < 2) return stationCoords;
+
+  // Run leg-by-leg routing in parallel to guarantee no-ferry bridge routing per segment
+  try {
+    const legPromises = [];
+    for (let i = 0; i < stationCoords.length - 1; i++) {
+      const from = stationCoords[i];
+      const to = stationCoords[i + 1];
+      legPromises.push(fetchSingleLegDrivingRoute(from, to));
+    }
+    const legResults = await Promise.all(legPromises);
+    
+    // Apply slight right-hand driving offset to each leg so overlapping 2-way routes (e.g. across Denmark)
+    // run in parallel and preserve their dashed trail without filling in each other's gaps!
+    const offsetLegs = legResults.map(leg => offsetLeg(leg, 0.0024));
+    
+    return offsetLegs.length > 0 ? offsetLegs : [stationCoords];
+  } catch (err) {
+    console.error('Error fetching driving routes:', err);
+    return [stationCoords];
+  }
+}
+
+async function fetchSingleLegDrivingRoute(from, to) {
+  try {
+    // 1. Try direct route between the two stops
+    const directRoute = await queryOSRM([from, to]);
+    if (directRoute) {
+      // If no ferry is used, return direct road geometry
+      if (!routeHasFerry(directRoute)) {
+        return directRoute.geometry.coordinates.map(pt => [pt[1], pt[0]]);
+      }
+
+      // If a ferry/ship was detected, route strictly through land & bridges instead:
+      // Øresund Bridge (DK <-> SE): [55.5760, 12.8480]
+      // Great Belt Bridge / Storebælt (Zealand <-> Funen): [55.3350, 10.9850]
+      const bridgeCandidates = [
+        [from, [55.5760, 12.8480], to],                          // Via Øresund Bridge
+        [from, [55.3350, 10.9850], to],                          // Via Storebælt Bridge
+        [from, [55.3350, 10.9850], [55.5760, 12.8480], to],     // Via Storebælt then Øresund
+        [from, [55.5760, 12.8480], [55.3350, 10.9850], to]      // Via Øresund then Storebælt
+      ];
+
+      for (const candidate of bridgeCandidates) {
+        const candidateRoute = await queryOSRM(candidate);
+        if (candidateRoute && !routeHasFerry(candidateRoute)) {
+          return candidateRoute.geometry.coordinates.map(pt => [pt[1], pt[0]]);
+        }
+      }
+
+      // Fallback if unreachable without ferry
+      return directRoute.geometry.coordinates.map(pt => [pt[1], pt[0]]);
+    }
+  } catch (e) {
+    console.warn('Single leg routing error:', e);
+  }
+  return [from, to];
+}
 
 function toLocalDateStr(d) {
   if (!d) return '';
@@ -65,19 +217,29 @@ function initMap() {
     zoomAnimationThreshold: 8,
     fadeAnimation: true,
     inertia: true,
-    inertiaDeceleration: 3000
+    inertiaDeceleration: 3000,
+    minZoom: 4.5      // Below this, even capital cities disappear from OSM tiles
   }).setView([58.6, 15.2], 5.85);
 
   // Layer 1: ESRI Topographic Shaded Relief (High Quality)
   hillshadeLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 19,
     maxNativeZoom: 16,
-    detectRetina: true,
     opacity: mapAesthetics.relief / 100
   }).addTo(map);
 
   // Set initial map base tile layer based on selected language
   updateMapTileLayer();
+
+  // Real-time bidirectional zoom listeners
+  map.on('zoom', updateZoomUI);
+  map.on('zoomend', () => {
+    updateZoomUI();
+    if (!isPreparingPrint) saveSession(false);
+  });
+  map.on('moveend', () => {
+    if (!isPreparingPrint) saveSession(false);
+  });
 
   // Map Click Listener for "Pick Location" mode
   map.on('click', (e) => {
@@ -117,6 +279,39 @@ function initMap() {
   });
 }
 
+function updateZoomUI() {
+  if (!map) return;
+  const zoom = map.getZoom();
+  const zoomFormatted = `${zoom.toFixed(2)}x`;
+
+  // Sidebar zoom slider & indicator
+  const sidebarZoomSlider = document.getElementById('slider-map-zoom');
+  const sidebarZoomVal = document.getElementById('val-map-zoom');
+  if (sidebarZoomSlider && document.activeElement !== sidebarZoomSlider) {
+    sidebarZoomSlider.value = zoom;
+  }
+  if (sidebarZoomVal) {
+    sidebarZoomVal.textContent = zoomFormatted;
+  }
+}
+
+function fitRouteBounds() {
+  if (!map) return;
+  const latlngs = stations.map(loc => loc.coords);
+  if (latlngs.length > 1) {
+    try {
+      map.fitBounds(L.latLngBounds(latlngs), { 
+        paddingTopLeft: [115, 60], 
+        paddingBottomRight: [75, 135],
+        maxZoom: 12,
+        animate: true
+      });
+    } catch(e) {}
+  } else if (latlngs.length === 1) {
+    map.setView(latlngs[0], 7);
+  }
+}
+
 function updateMapTileLayer() {
   if (mapTileLayer) {
     map.removeLayer(mapTileLayer);
@@ -128,10 +323,10 @@ function updateMapTileLayer() {
     ? 'https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png'
     : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
+  // Standard tile configuration: consistent 1:1 scale, city labels appear at natural size
   mapTileLayer = L.tileLayer(tileUrl, {
     maxZoom: 19,
     maxNativeZoom: 18,
-    detectRetina: true,
     tileSize: 256,
     zoomOffset: 0,
     opacity: 0.90
@@ -199,7 +394,7 @@ function formatDisplayDates(startStr, endStr) {
   return `${formattedStart} – ${formattedEnd}`;
 }
 
-function renderPoster() {
+function renderPoster(shouldAutoFit = false) {
   if (!map) return;
 
   // Clear existing markers & polylines
@@ -224,33 +419,60 @@ function renderPoster() {
   const latlngs = stations.map(loc => loc.coords);
 
   if (latlngs.length > 1) {
+    const routeKey = getRouteCacheKey(stations);
+    const isDriving = (routeStyle === 'driving');
+    const hasCachedRoute = isDriving && routeCache.has(routeKey);
+    const initialLineCoords = hasCachedRoute ? routeCache.get(routeKey) : [latlngs];
+
     // Outer glow casing
-    outerPolyline = L.polyline(latlngs, {
+    outerPolyline = L.polyline(initialLineCoords, {
       color: '#ffffff',
-      weight: 6,
+      weight: 5.5,
       opacity: 0.95,
-      lineCap: 'round'
+      lineCap: 'round',
+      lineJoin: 'round'
     }).addTo(map);
 
     // Inner bold dashed trail line
-    innerPolyline = L.polyline(latlngs, {
+    innerPolyline = L.polyline(initialLineCoords, {
       color: '#dc2626',
-      weight: 3.5,
+      weight: 3.2,
       opacity: 0.95,
-      dashArray: '8, 8',
-      lineCap: 'round'
+      dashArray: '7, 7',
+      lineCap: 'round',
+      lineJoin: 'round'
     }).addTo(map);
 
-    // Auto-fit to view with harmonious padding ensuring all stops clear Title and Legend cards
-    try {
-      map.fitBounds(L.latLngBounds(latlngs), { 
-        paddingTopLeft: [115, 60], 
-        paddingBottomRight: [75, 135],
-        maxZoom: 12,
-        animate: true
-      });
-    } catch(e) {}
-  } else if (latlngs.length === 1) {
+    // Only auto-fit when explicitly requested (e.g. initial setup or user clicks Fit Route)
+    if (shouldAutoFit) {
+      try {
+        map.fitBounds(L.latLngBounds(latlngs), { 
+          paddingTopLeft: [115, 60], 
+          paddingBottomRight: [75, 135],
+          maxZoom: 12,
+          animate: true
+        });
+      } catch(e) {}
+    }
+
+    // Asynchronously fetch driving route when not in cache
+    if (isDriving && !hasCachedRoute) {
+      const requestId = ++currentRouteRequestId;
+      fetchDrivingRoute(latlngs)
+        .then(roadCoords => {
+          if (requestId === currentRouteRequestId && roadCoords && roadCoords.length > 0) {
+            routeCache.set(routeKey, roadCoords);
+            if (outerPolyline && innerPolyline) {
+              outerPolyline.setLatLngs(roadCoords);
+              innerPolyline.setLatLngs(roadCoords);
+            }
+          }
+        })
+        .catch(err => {
+          console.warn('Driving route fetch error, retaining direct line:', err);
+        });
+    }
+  } else if (latlngs.length === 1 && shouldAutoFit) {
     map.setView(latlngs[0], 7);
   }
 
@@ -417,12 +639,20 @@ function initSidebarControls() {
       poster_header_label: "Poster-Überschrift",
       title_placeholder: "Titel (z.B. Schweden Reise)",
       subtitle_placeholder: "Untertitel (z.B. Sommer 2026)",
+      route_style_label: "Routen-Stil",
+      route_style_driving: "Fahrstrecke (Auto / Straßen)",
+      route_style_direct: "Direktlinie (Luftlinie)",
+      title_size_label: "Titel-Box Größe",
+      legend_size_label: "Stationen-Menü Größe",
+      map_zoom_section_label: "Karten-Zoom & Ausschnitt",
+      fit_route_btn: "Route einpassen",
       map_aesthetic_label: "Karten-Farben & Optik",
       aesthetic_reset_btn: "Standard",
       slider_saturation: "Farbsättigung",
       slider_contrast: "Kontrast",
       slider_brightness: "Helligkeit",
       slider_relief: "Relief / Gelände",
+      slider_zoom: "Zoomstufe",
       preset_vibrant: "Lebendig",
       preset_natural: "Natürlich",
       preset_pastel: "Sanft",
@@ -453,12 +683,20 @@ function initSidebarControls() {
       poster_header_label: "Poster Header",
       title_placeholder: "Title (e.g. Sweden Trip)",
       subtitle_placeholder: "Subtitle (e.g. Summer 2026)",
+      route_style_label: "Route Style",
+      route_style_driving: "Driving Route (Car / Roads)",
+      route_style_direct: "Direct Line (Beeline)",
+      title_size_label: "Title Box Size",
+      legend_size_label: "Station Menu Size",
+      map_zoom_section_label: "Map Zoom & Framing",
+      fit_route_btn: "Fit Route",
       map_aesthetic_label: "Map Colors & Aesthetics",
       aesthetic_reset_btn: "Reset",
       slider_saturation: "Color Saturation",
       slider_contrast: "Contrast",
       slider_brightness: "Brightness",
       slider_relief: "Terrain Relief",
+      slider_zoom: "Zoom Level",
       preset_vibrant: "Vibrant",
       preset_natural: "Natural",
       preset_pastel: "Pastel",
@@ -506,6 +744,13 @@ function initSidebarControls() {
       sizeSelect.options[2].text = t.opt_a5;
       sizeSelect.options[3].text = t.opt_square_small;
       sizeSelect.options[4].text = t.opt_square_large;
+    }
+
+    // Update route style select options text
+    const routeSelect = document.getElementById('route-style-select');
+    if (routeSelect && routeSelect.options.length >= 2) {
+      routeSelect.options[0].text = t.route_style_driving;
+      routeSelect.options[1].text = t.route_style_direct;
     }
   };
 
@@ -584,13 +829,36 @@ function initSidebarControls() {
 
   sizeSelect.addEventListener('change', updatePosterDimensions);
 
-  // High-resolution print layout listeners
-  window.addEventListener('afterprint', () => {
-    if (map) {
-      map.invalidateSize();
+  const routeSelect = document.getElementById('route-style-select');
+  if (routeSelect) {
+    routeSelect.addEventListener('change', (e) => {
+      routeStyle = e.target.value;
+      saveSession(false);
       renderPoster();
-    }
-  });
+    });
+  }
+
+  const titleScaleInput = document.getElementById('slider-title-scale');
+  if (titleScaleInput) {
+    titleScaleInput.addEventListener('input', (e) => {
+      titleScale = parseInt(e.target.value);
+      applyTitleScale(titleScale, false);
+      saveSession(false);
+    });
+  }
+
+  const legendScaleInput = document.getElementById('slider-legend-scale');
+  if (legendScaleInput) {
+    legendScaleInput.addEventListener('input', (e) => {
+      legendScale = parseInt(e.target.value);
+      applyLegendScale(legendScale, false);
+      saveSession(false);
+    });
+  }
+
+  // High-resolution print layout listeners
+  window.addEventListener('beforeprint', prepareForPrint);
+  window.addEventListener('afterprint', cleanupAfterPrint);
 
   // Aesthetic Sliders Input Listeners
   if (satInput) {
@@ -623,6 +891,22 @@ function initSidebarControls() {
       mapAesthetics.preset = 'custom';
       applyMapAesthetics();
       saveSession(false);
+    });
+  }
+
+  // Sidebar Map Zoom Slider & Fit Route Button
+  const sidebarZoomSlider = document.getElementById('slider-map-zoom');
+  if (sidebarZoomSlider) {
+    sidebarZoomSlider.addEventListener('input', (e) => {
+      const zoom = parseFloat(e.target.value);
+      if (map) map.setZoom(zoom);
+    });
+  }
+
+  const fitRouteBtn = document.getElementById('fit-route-btn');
+  if (fitRouteBtn) {
+    fitRouteBtn.addEventListener('click', () => {
+      fitRouteBounds();
     });
   }
 
@@ -752,6 +1036,7 @@ function saveSession(showFeedback = false) {
   const titleInput = document.getElementById('poster-title-input');
   const subtitleInput = document.getElementById('poster-subtitle-input');
   const sizeSelect = document.getElementById('poster-size-select');
+  const routeSelect = document.getElementById('route-style-select');
   const saveBtn = document.getElementById('save-session-btn');
   const saveBtnText = document.getElementById('save-session-btn-text');
 
@@ -761,7 +1046,14 @@ function saveSession(showFeedback = false) {
     title: titleInput ? titleInput.value : 'Schweden Reise',
     subtitle: subtitleInput ? subtitleInput.value : 'Sommer 2026',
     size: sizeSelect ? sizeSelect.value : 'a4',
-    lang: currentLang
+    routeStyle: routeSelect ? routeSelect.value : routeStyle,
+    titleScale: titleScale,
+    legendScale: legendScale,
+    legendWidth: legendWidth,
+    sidebarWidth: sidebarWidth,
+    lang: currentLang,
+    mapCenter: map ? [map.getCenter().lat, map.getCenter().lng] : null,
+    mapZoom: map ? map.getZoom() : null
   };
 
   try {
@@ -784,7 +1076,7 @@ function saveSession(showFeedback = false) {
 function loadSavedSession() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
+    if (!raw) return false;
 
     const data = JSON.parse(raw);
     if (data.stations && Array.isArray(data.stations)) {
@@ -799,6 +1091,7 @@ function loadSavedSession() {
     const displayTitle = document.getElementById('display-poster-title');
     const displaySubtitle = document.getElementById('display-poster-subtitle');
     const sizeSelect = document.getElementById('poster-size-select');
+    const routeSelect = document.getElementById('route-style-select');
     const langToggle = document.getElementById('language-toggle');
 
     if (data.title && titleInput && displayTitle) {
@@ -814,15 +1107,216 @@ function loadSavedSession() {
       const event = new Event('change');
       sizeSelect.dispatchEvent(event);
     }
+    if (data.routeStyle) {
+      routeStyle = data.routeStyle;
+      if (routeSelect) {
+        routeSelect.value = data.routeStyle;
+      }
+    }
+    if (data.titleScale !== undefined) {
+      titleScale = data.titleScale;
+      applyTitleScale(titleScale, true);
+    }
+    if (data.legendScale !== undefined) {
+      legendScale = data.legendScale;
+      applyLegendScale(legendScale, true);
+    }
+    if (data.legendWidth !== undefined) {
+      legendWidth = data.legendWidth;
+      applyLegendWidth(legendWidth);
+    }
+    if (data.sidebarWidth !== undefined) {
+      sidebarWidth = data.sidebarWidth;
+      applySidebarWidth(sidebarWidth);
+    }
     if (data.lang && langToggle) {
       currentLang = data.lang;
       langToggle.checked = (data.lang === 'en');
       const event = new Event('change');
       langToggle.dispatchEvent(event);
     }
+    if (data.mapCenter && data.mapZoom && map) {
+      map.setView(data.mapCenter, data.mapZoom, { animate: false });
+      updateZoomUI();
+    }
+    return true;
   } catch (e) {
     console.error('Error loading saved session:', e);
+    return false;
   }
+}
+
+function applyTitleScale(scalePercent, updateSlider = true) {
+  titleScale = scalePercent;
+  const titleCard = document.getElementById('title-card');
+  const titleScaleInput = document.getElementById('slider-title-scale');
+  const titleScaleVal = document.getElementById('val-title-scale');
+  if (titleCard) {
+    titleCard.style.setProperty('--title-scale', (scalePercent / 100).toString());
+  }
+  if (titleScaleVal) {
+    titleScaleVal.textContent = `${scalePercent}%`;
+  }
+  if (updateSlider && titleScaleInput) {
+    titleScaleInput.value = scalePercent;
+  }
+}
+
+function initTitleResize() {
+  const titleCard = document.getElementById('title-card');
+  const handle = document.getElementById('title-resize-handle');
+  if (!titleCard || !handle) return;
+
+  let isDragging = false;
+  let startX, startY, startScale;
+
+  handle.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isDragging = true;
+    handle.classList.add('active');
+    startX = e.clientX;
+    startY = e.clientY;
+    startScale = titleScale;
+    document.body.style.cursor = 'nwse-resize';
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - startX; // Dragging right increases scale
+    const deltaY = e.clientY - startY; // Dragging down increases scale
+    const delta = (deltaX + deltaY) / 2;
+
+    const newScale = Math.max(70, Math.min(160, Math.round(startScale + (delta * 0.35))));
+    applyTitleScale(newScale, true);
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      handle.classList.remove('active');
+      document.body.style.cursor = '';
+      saveSession(false);
+    }
+  });
+}
+
+function applyLegendScale(scalePercent, updateSlider = true) {
+  legendScale = scalePercent;
+  const legendCard = document.getElementById('legend-card');
+  const legendScaleInput = document.getElementById('slider-legend-scale');
+  const legendScaleVal = document.getElementById('val-legend-scale');
+  if (legendCard) {
+    legendCard.style.setProperty('--legend-scale', (scalePercent / 100).toString());
+  }
+  if (legendScaleVal) {
+    legendScaleVal.textContent = `${scalePercent}%`;
+  }
+  if (updateSlider && legendScaleInput) {
+    legendScaleInput.value = scalePercent;
+  }
+}
+
+function applyLegendWidth(widthPx) {
+  legendWidth = widthPx;
+  const legendCard = document.getElementById('legend-card');
+  if (legendCard) {
+    legendCard.style.setProperty('--legend-width', `${widthPx}px`);
+    if (widthPx >= 300) {
+      legendCard.classList.add('multi-column');
+    } else {
+      legendCard.classList.remove('multi-column');
+    }
+  }
+}
+
+function applySidebarWidth(widthPx) {
+  sidebarWidth = widthPx;
+  const sidebar = document.getElementById('editor-sidebar');
+  if (sidebar) {
+    sidebar.style.setProperty('--sidebar-width', `${widthPx}px`);
+  }
+}
+
+function initLegendResize() {
+  const legendCard = document.getElementById('legend-card');
+  const handle = document.getElementById('legend-resize-handle');
+  if (!legendCard || !handle) return;
+
+  let isDragging = false;
+  let startX, startY, startWidth, startScale;
+
+  handle.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isDragging = true;
+    handle.classList.add('active');
+    startX = e.clientX;
+    startY = e.clientY;
+    startWidth = legendCard.offsetWidth;
+    startScale = legendScale;
+    document.body.style.cursor = 'nwse-resize';
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const deltaX = startX - e.clientX; // Dragging left increases width because anchored on right
+    const deltaY = startY - e.clientY; // Dragging up increases scale smoothly
+
+    const newWidth = Math.max(160, Math.min(520, startWidth + deltaX));
+    applyLegendWidth(newWidth);
+
+    // If vertical movement is significant, scale font smoothly
+    if (Math.abs(deltaY) > 15) {
+      const newScale = Math.max(70, Math.min(140, Math.round(startScale + (deltaY * 0.25))));
+      applyLegendScale(newScale, true);
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      handle.classList.remove('active');
+      document.body.style.cursor = '';
+      saveSession(false);
+    }
+  });
+}
+
+function initSidebarResize() {
+  const sidebar = document.getElementById('editor-sidebar');
+  const handle = document.getElementById('sidebar-resize-handle');
+  if (!sidebar || !handle) return;
+
+  let isDragging = false;
+  let startX, startWidth;
+
+  handle.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    isDragging = true;
+    sidebar.classList.add('resizing');
+    handle.classList.add('active');
+    startX = e.clientX;
+    startWidth = sidebar.offsetWidth;
+    document.body.style.cursor = 'ew-resize';
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - startX;
+    const newWidth = Math.max(280, Math.min(650, startWidth + deltaX));
+    applySidebarWidth(newWidth);
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      sidebar.classList.remove('resizing');
+      handle.classList.remove('active');
+      document.body.style.cursor = '';
+      saveSession(false);
+    }
+  });
 }
 
 function toggleMapPickMode(enable) {
@@ -871,15 +1365,59 @@ function escapeHtml(str) {
   }[match]));
 }
 
+let savedMapState = null;
+let isPreparingPrint = false;
+
+function prepareForPrint() {
+  if (!map || isPreparingPrint) return;
+  isPreparingPrint = true;
+  savedMapState = {
+    center: map.getCenter(),
+    zoom: map.getZoom(),
+    bounds: map.getBounds()
+  };
+  document.body.classList.add('preparing-print');
+  map.invalidateSize({ pan: false });
+  // Exact boundary framing so the printed poster matches the screen view 1:1
+  map.fitBounds(savedMapState.bounds, { animate: false, padding: [0, 0] });
+  renderPoster(false);
+}
+
+function cleanupAfterPrint() {
+  if (!map || !isPreparingPrint) return;
+  isPreparingPrint = false;
+  document.body.classList.remove('preparing-print');
+  if (savedMapState) {
+    map.invalidateSize({ pan: false });
+    map.setView(savedMapState.center, savedMapState.zoom, { animate: false });
+    updateZoomUI();
+    savedMapState = null;
+  } else {
+    map.invalidateSize({ pan: false });
+    updateZoomUI();
+  }
+  renderPoster(false);
+}
+
 /**
  * High-quality print function.
- * Invalidates the map layout so Leaflet re-renders all tiles at full resolution,
- * then triggers window.print() — no zoom manipulation, no view changes.
+ * Expands poster to full print dimensions, renders all tiles across the canvas,
+ * and triggers window.print() before seamlessly restoring screen view.
  */
 function printPoster() {
-  if (!map) { window.print(); return; }
-  // Force Leaflet to recalculate tile layout at full size
-  map.invalidateSize({ pan: false });
-  // Brief delay to let any pending tile repaints settle, then print
-  setTimeout(() => { window.print(); }, 200);
+  if (!map) {
+    window.print();
+    return;
+  }
+
+  prepareForPrint();
+
+  // Give Leaflet tiles 250ms to load and render across the full print canvas
+  setTimeout(() => {
+    window.print();
+    // Safety fallback in case afterprint does not fire in some browsers
+    setTimeout(() => {
+      cleanupAfterPrint();
+    }, 150);
+  }, 250);
 }
