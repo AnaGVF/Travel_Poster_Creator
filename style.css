@@ -369,6 +369,7 @@ html, body {
   z-index: 10000;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 13px;
   color: #2d3748;
@@ -465,6 +466,9 @@ input:checked + .slider:before {
 }
 
 .sidebar-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   padding: 18px 20px;
   background: #1e3a5f;
   color: #ffffff;
@@ -682,12 +686,10 @@ input:checked + .slider:before {
 }
 
 .sidebar-section-stations {
-  flex: 1;
-  min-height: 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   padding-bottom: 24px;
-  overflow: hidden;
 }
 
 .station-section-header {
@@ -711,9 +713,6 @@ input:checked + .slider:before {
 }
 
 .station-list {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
   padding-right: 6px;
   padding-bottom: 40px; /* Comfortable bottom breathing room so the last station is fully visible */
 }
