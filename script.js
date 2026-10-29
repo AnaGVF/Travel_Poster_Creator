@@ -317,19 +317,19 @@ function updateMapTileLayer() {
     map.removeLayer(mapTileLayer);
   }
 
-  // High-resolution tile configuration
-  const isGerman = currentLang === 'de';
-  const tileUrl = isGerman
-    ? 'https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png'
-    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  // Use the reliable OpenStreetMap DE tile server for both German and English
+  // Covers the entire world, never 403 blocks, and functions identically in all modes
+  const tileUrl = 'https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png';
 
-  // Standard tile configuration: consistent 1:1 scale, city labels appear at natural size
   mapTileLayer = L.tileLayer(tileUrl, {
     maxZoom: 19,
     maxNativeZoom: 18,
     tileSize: 256,
     zoomOffset: 0,
-    opacity: 0.90
+    opacity: 0.90,
+    subdomains: 'abc',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    crossOrigin: true
   }).addTo(map);
 
   applyMapAesthetics();
@@ -1220,9 +1220,13 @@ function applyLegendScale(scalePercent, updateSlider = true) {
 function applyLegendWidth(widthPx) {
   legendWidth = widthPx;
   const legendCard = document.getElementById('legend-card');
+  const container = document.querySelector('.page-container');
   if (legendCard) {
     legendCard.style.setProperty('--legend-width', `${widthPx}px`);
-    if (widthPx >= 300) {
+    const baseW = (container && container.clientWidth > 0) ? container.clientWidth : 570;
+    const pct = ((widthPx / baseW) * 100).toFixed(2);
+    legendCard.style.setProperty('--legend-width-pct', `${pct}cqw`);
+    if (widthPx >= 280) {
       legendCard.classList.add('multi-column');
     } else {
       legendCard.classList.remove('multi-column');
@@ -1371,15 +1375,34 @@ let isPreparingPrint = false;
 function prepareForPrint() {
   if (!map || isPreparingPrint) return;
   isPreparingPrint = true;
+
+  const container = document.querySelector('.page-container');
+  const screenWidth = container ? container.clientWidth : 800;
+
   savedMapState = {
     center: map.getCenter(),
     zoom: map.getZoom(),
-    bounds: map.getBounds()
+    screenWidth: screenWidth
   };
+
   document.body.classList.add('preparing-print');
   map.invalidateSize({ pan: false });
-  // Exact boundary framing so the printed poster matches the screen view 1:1
-  map.fitBounds(savedMapState.bounds, { animate: false, padding: [0, 0] });
+
+  // Calculate exact scale factor between screen preview and print dimensions
+  const printWidth = container ? container.clientWidth : screenWidth;
+  const scale = screenWidth > 0 ? (printWidth / screenWidth) : 1;
+  const zoomOffset = Math.log2(scale);
+  const printZoom = savedMapState.zoom + zoomOffset;
+
+  // Set CSS print scale variable so cards, pins, and fonts scale in exact 1:1 proportion
+  document.documentElement.style.setProperty('--print-scale', scale.toFixed(4));
+
+  // Scale polyline stroke widths proportionally
+  if (outerPolyline) outerPolyline.setStyle({ weight: 5 * scale });
+  if (innerPolyline) innerPolyline.setStyle({ weight: 2.5 * scale, dashArray: `${6 * scale}, ${6 * scale}` });
+
+  // Preserve exact center and match scale so map does not zoom out or shift
+  map.setView(savedMapState.center, printZoom, { animate: false });
   renderPoster(false);
 }
 
@@ -1387,6 +1410,12 @@ function cleanupAfterPrint() {
   if (!map || !isPreparingPrint) return;
   isPreparingPrint = false;
   document.body.classList.remove('preparing-print');
+  document.documentElement.style.removeProperty('--print-scale');
+
+  // Restore polyline stroke widths
+  if (outerPolyline) outerPolyline.setStyle({ weight: 5 });
+  if (innerPolyline) innerPolyline.setStyle({ weight: 2.5, dashArray: '6, 6' });
+
   if (savedMapState) {
     map.invalidateSize({ pan: false });
     map.setView(savedMapState.center, savedMapState.zoom, { animate: false });
@@ -1412,12 +1441,12 @@ function printPoster() {
 
   prepareForPrint();
 
-  // Give Leaflet tiles 250ms to load and render across the full print canvas
+  // Give Leaflet tiles 350ms to load and render across the full print canvas
   setTimeout(() => {
     window.print();
     // Safety fallback in case afterprint does not fire in some browsers
     setTimeout(() => {
       cleanupAfterPrint();
-    }, 150);
-  }, 250);
+    }, 1500);
+  }, 350);
 }

@@ -1,80 +1,178 @@
 # 🗺️ Travel Poster Creator
 
-> **Craft stunning, personalized print-ready travel posters from your road trips and journeys.**
+<p align="center">
+  <strong>A high-performance, interactive web studio for designing, styling, and printing elegant, high-resolution road trip maps and personalized travel posters.</strong>
+</p>
 
-An interactive web application designed to create elegant, high-resolution travel posters featuring customized map backgrounds, custom route polylines, station pins with smart balloon labels, dynamic legends, and real-time color aesthetic controls.
+<p align="center">
+  <a href="https://anagvf.github.io/Travel_Poster_Creator/"><strong>Explore the Live Studio »</strong></a>
+</p>
 
----
-
-## 🌐 Live Demo
-
-Try the application directly in your browser:  
-👉 **[https://anagvf.github.io/Travel_Poster_Creator/](https://anagvf.github.io/Travel_Poster_Creator/)**
-
----
-
-## ✨ Features
-
-### 🎨 Map Aesthetics & Post-Processing
-* **Real-time Color Controls**: Fine-tune map **Farbsättigung (Saturation)**, **Kontrast (Contrast)**, **Helligkeit (Brightness)**, and **Relief / Gelände (Hillshade)** via smooth interactive sliders.
-* **One-Click Presets**: Instant aesthetic styling with **Lebendig (Vibrant)**, **Natürlich (Natural)**, and **Sanft (Pastel)** presets.
-* **Non-Destructive Filtering**: Color grading applies strictly to the background map canvas, keeping station markers, route lines, titles, and legends crisp and readable.
-
-### 📍 Route & Station Management
-* **Realistic Car Driving Routes**: Generates authentic road trip paths following real highways, motorways, curves, and bridges powered by the Open Source Routing Machine (OSRM).
-* **Route Style Options**: Seamlessly switch between **Fahrstrecke (Auto / Straßen) / Driving Route** and **Direktlinie (Luftlinie) / Direct Beeline**.
-* **Smart Balloon Station Markers**: Elevated teardrop pins with pointer tails that point precisely at coordinates without covering city labels (e.g., Stockholm, Karlstad).
-* **Global Location Search**: Search cities or landmarks worldwide powered by the Nominatim Geocoding API.
-* **Interactive Map Pinning**: Click anywhere directly on the map canvas to place new route stops.
-* **Sequential Reordering**: Move stations up or down with `↑` and `↓` controls; numbers dynamically update across markers, legend badges, and sidebar items.
-* **Date Integration**: Set stay durations per station using an interactive [Flatpickr](https://flatpickr.js.org/) calendar range picker.
-
-### 🖼️ Poster Formats & High-Res Printing
-* **Multiple Print Formats**: Pre-configured dimensions for **A4**, **A3**, **A5**, and **Square (210×210mm & 297×297mm)** formats with dynamic layout refitting.
-* **Print & PDF Export**: Optimized `@media print` layout stripping away sidebar controls and fitting full bleed to target paper dimensions.
-* **Seamless Zoom & Smooth Kinematics**: Smooth fractional zooming (`zoomSnap: 0.25`) for fluid navigation.
-
-### 💾 Persistence & Localization
-* **Session Auto-Save & Manual Save**: Edits are stored automatically in browser `localStorage`. Includes a dedicated **"Session speichern" / "Save Session"** toolbar button with instant confirmation feedback.
-* **Bilingual Support (DE / EN)**: Instant toggle between German and English for UI controls, legend headers, and map tile labels.
-* **One-Click Reset**: Easily start fresh with the controlled **"Standard zurücksetzen" / "Reset Defaults"** action.
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Live%20on%20GitHub%20Pages-success?style=for-the-badge&logo=github&logoColor=white" alt="Deployment Status" />
+  <img src="https://img.shields.io/badge/Leaflet-1.9.4-199900?style=for-the-badge&logo=leaflet&logoColor=white" alt="Leaflet" />
+  <img src="https://img.shields.io/badge/Routing-OSRM%20Engine-0078FF?style=for-the-badge" alt="OSRM Routing" />
+  <img src="https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/Print-Ready%20A3%20%2F%20A4%20%2F%20A5-E11D48?style=for-the-badge" alt="Print Formats" />
+  <img src="https://img.shields.io/badge/Privacy-100%25%20In--Browser-10B981?style=for-the-badge" alt="Privacy First" />
+</p>
 
 ---
 
-## 🛠️ Technology Stack
+## 💡 Why Travel Poster Creator?
 
-| Component | Technology Used |
+Commercial map print services and custom poster generators often come with frustrating limitations:
+- **Steep costs & paywalls**: Commercial poster services charge heavy markups for simple static map prints.
+- **Rigid, inflexible templates**: Most map makers draw straight lines between points rather than actual driving routes, ignoring the true curves, highways, and bridges of your road trip.
+- **Cluttered markers & overlapping lines**: Return routes often completely obscure outbound journeys, and generic map markers blot out city names and coastal borders.
+- **Zero real-time visual control**: You are stuck with fixed color palettes with no ability to tune saturation, contrast, topographic hillshading, or frame scaling on the fly.
+
+**Travel Poster Creator** solves all of this:
+1. **100% In-Browser & Free**: Everything runs client-side with zero account sign-ups, subscriptions, watermarks, or hidden paywalls.
+2. **Authentic Road Trip Geometry**: Computes authentic turn-by-turn car routes via the Open Source Routing Machine (OSRM), complete with ferry detection and smart leg-offsetting algorithms so round trips never merge into a single confusing line.
+3. **Studio-Grade Aesthetic & Typography Controls**: Real-time post-processing filters (Saturation, Contrast, Brightness, Topographic Relief) applied strictly to the map canvas, combined with interactive drag-to-resize title cards, customizable station legends, and elegant teardrop balloon pins.
+4. **Print-Ready Perfection**: Export pixel-perfect posters in standard dimensions (**A3**, **A4**, **A5**, or **Square**) with dedicated print styling that strips away UI chrome and delivers clean, bleed-to-edge PDFs.
+
+---
+
+## 🚀 Key Features
+
+### 🛣️ Turn-by-Turn Driving Routing (OSRM)
+- **Authentic Road Trip Paths**: Automatically plots genuine driving paths across motorways, scenic mountain passes, coastal bridges, and country highways powered by the Open Source Routing Machine (OSRM).
+- **Intelligent Leg Offsetting**: Employs normal-vector coordinate offsetting (`offsetLeg`) on overlapping road segments so return journeys remain clearly visible alongside outbound legs.
+- **Ferry & Sea Crossing Detection**: Accurately recognizes and renders ferry transit legs between islands and international borders.
+- **Dual Routing Modes**: Toggle instantly between **Fahrstrecke (Driving Route)** and **Direktlinie (Direct Beeline)** modes.
+
+### 🎨 Real-Time Map Aesthetics & Color Grading
+- **Live Post-Processing Sliders**: Fine-tune **Farbsättigung (Saturation)**, **Kontrast (Contrast)**, **Helligkeit (Brightness)**, and **Relief / Gelände (Esri Hillshade)** in real time.
+- **Instant Aesthetic Presets**:
+  - 🌟 **Lebendig (Vibrant)**: Rich color saturation and elevated contrast for lively vacation posters.
+  - 🌿 **Natürlich (Natural)**: Balanced, true-to-life tones for classical cartography.
+  - 🌸 **Sanft (Pastel)**: Muted tones with soft contrast for modern Scandinavian wall decor.
+- **Non-Destructive Filtering**: Color shaders apply exclusively to the base tile layers, ensuring markers, text labels, polyline strokes, and legend elements remain razor sharp.
+
+### 📍 Station Management & Smart Markers
+- **Elevated Teardrop Balloon Pins**: Custom SVG map markers with pointer tails designed to highlight exact coordinates without obscuring city labels or terrain.
+- **Global Location Search**: Instant search for cities, regions, and landmarks across the globe via the Nominatim Geocoding API.
+- **Interactive Map Pinning**: Click directly anywhere on the map to drop a new waypoint with automatic geocoded coordinates.
+- **Dynamic Sequence Reordering**: Reorder itinerary stops using `↑` and `↓` buttons with automatic sequential number updates across pins, legend badges, and drawer lists.
+- **Date Integration**: Assign custom stay durations per station using integrated [Flatpickr](https://flatpickr.js.org/) date range calendars.
+
+### 📐 Interactive Layout & Drag-to-Resize Studio
+- **Direct Visual Resizing**: Drag handles on the **Title Card**, **Station Legend Box**, and **Sidebar Drawer** for intuitive manual resizing directly on screen.
+- **Live Scale Sliders**: Adjust Title Box scale (70% – 160%) and Legend Box scale (70% – 140%) with live percentage badges.
+- **Precision Fractional Zoom**: Smooth map scaling (`zoomSnap: 0.25`) with a dedicated **Route einpassen (Fit Route)** button to frame your entire journey automatically.
+
+### 🖨️ Multi-Format Print & PDF Export Hub
+- **1:1 WYSIWYG Print Fidelity**: Proportional logarithmic scaling eliminates map-shifting or zooming out; what you frame on screen matches the print preview down to the millimeter.
+- **Direct PDF & Print Export**: Click **Poster speichern / drucken** to immediately open the print dialog to save as a lossless vector PDF or send to your printer.
+- **Standard Print Formats**: Pre-calculated aspect ratios and dimension presets:
+  - **A4 Portrait** (210 × 297 mm)
+  - **A3 Portrait** (297 × 420 mm)
+  - **A5 Minidruck** (148 × 210 mm)
+  - **Square Art** (210 × 210 mm)
+  - **Square Wall Art** (297 × 297 mm)
+- **Full-Bleed Vector PDF**: Dedicated `@media print` rules strip out sidebar controls and browser headers, producing clean, bleed-to-edge outputs ready for professional framing.
+
+### 💾 Safe Session Recovery & Bilingual Localization
+- **Instant Persistence**: Automatically saves your route, custom stops, dates, and aesthetic preferences in browser `localStorage`.
+- **Manual Save & Status Feedback**: Dedicated **Session speichern** button with instant visual confirmation.
+- **Bilingual Interface (DE / EN)**: Seamlessly switch between German and English for UI labels, titles, and map tiles with a single click.
+- **Safe Reset**: One-click restore to sample route presets whenever you want to begin a fresh itinerary.
+
+---
+
+## 🏗️ How it Works Under the Hood
+
+```
+   [ Search Location / Click Map ]
+              │
+              ▼
+   [ Nominatim Geocoding ] ────────► Lat/Lon Coordinates & Waypoints
+              │
+              ▼
+   [ OSRM Driving Engine ] ────────► GeoJSON Road Geometry + Ferry Detection
+              │
+              ▼
+   [ Route Leg Offsetting ] ───────► Overlapping Highway & Return Leg Offset
+              │
+              ▼
+   [ Leaflet Canvas Pipeline ] ────► Multi-Layer: OSM Tiles + Esri World Hillshade
+              │
+              ▼
+   [ Real-Time Color Shader ] ─────► Non-Destructive CSS Filters (Saturation / Contrast)
+              │
+              ▼
+   [ Interactive Studio ] ─────────► Scalable Title & Station Cards + Teardrop Pins
+              │
+              └───► [ High-Resolution Print / PDF Export (A3 / A4 / A5 / Square) ]
+```
+
+---
+
+## 🎬 How to Create and Export Your Poster
+
+Creating your print-ready wall art takes just five straightforward steps:
+
+1. **Set Up Title & Details**:
+   - Open the **Stationen & Poster verwalten** drawer.
+   - Enter your journey title (e.g., *Schweden Reise*) and subtitle or year (e.g., *Sommer 2026*).
+2. **Add Your Waypoints**:
+   - Search for cities using the search bar, or click **Auf Karte klicken um Ort zu wählen** to pin coordinates directly on the map.
+   - Pick arrival and departure dates using the interactive calendar picker.
+   - Reorder stations up or down using the `↑` and `↓` buttons.
+3. **Choose Routing & Framing**:
+   - Choose between **Fahrstrecke (Auto / Straßen)** for real highway curves or **Direktlinie** for clean flight paths.
+   - Click **Route einpassen** to frame the entire journey perfectly within the poster canvas.
+4. **Dial In the Visual Aesthetic**:
+   - Pick a color preset (*Lebendig*, *Natürlich*, *Sanft*) or tweak the Saturation, Contrast, Brightness, and Relief sliders.
+   - Adjust the Title Box and Station Legend sizes using the drag handles or scale sliders.
+5. **Print or Save as PDF**:
+   - Select your desired print dimension (e.g., **A4** or **A3**).
+   - Click **Poster speichern / drucken**.
+   - In your browser's print dialog, choose **Save as PDF** or select your photo printer, set Margins to *None*, and enjoy your custom travel poster!
+
+---
+
+## 💻 Tech Stack
+
+| Technology | Purpose |
 | :--- | :--- |
-| **Frontend Core** | HTML5, CSS3, JavaScript (Vanilla ES6) |
-| **Interactive Maps** | [Leaflet.js](https://leafletjs.com/) (v1.9.4) |
-| **Car Driving Routing** | [OSRM Routing API](https://project-osrm.org/) |
-| **Map Base Tiles** | [OpenStreetMap](https://www.openstreetmap.org/) & [OpenStreetMap DE](https://www.openstreetmap.de/) |
-| **Topographic Relief** | [Esri World Hillshade](https://www.esri.com/) |
-| **Geocoding & Search** | [Nominatim API](https://nominatim.org/) |
-| **Date Selection** | [Flatpickr](https://flatpickr.js.org/) |
+| **[Vanilla JavaScript (ES6+)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)** | Core application logic, coordinate math, and state management |
+| **[Leaflet.js 1.9.4](https://leafletjs.com/)** | Interactive map canvas, smooth kinematics, and custom layer orchestration |
+| **[OSRM Routing API](https://project-osrm.org/)** | Turn-by-turn automotive route calculation and GeoJSON path geometries |
+| **[Nominatim API](https://nominatim.org/)** | Global geocoding and location search engine |
+| **[Esri World Hillshade](https://www.esri.com/)** | Shaded topographic relief tiles for realistic terrain depth |
+| **[OpenStreetMap DE](https://www.openstreetmap.de/)** | Reliable global base cartographic tiles with unrestricted community access |
+| **[Flatpickr](https://flatpickr.js.org/)** | Lightweight, responsive date range picker for travel itineraries |
+| **HTML5 & CSS3** | Custom glassmorphism, responsive drawer layout, and `@media print` engine |
+| **LocalStorage API** | Seamless, zero-backend persistent session caching |
 
 ---
 
-## 🚀 Quick Start
+## 🛠️ Local Development & Setup
 
-No complex build pipeline or package installation required. 
+### Prerequisites
+You only need a modern web browser (Google Chrome, Mozilla Firefox, Microsoft Edge, or Safari). No package managers or build tools are required.
 
-1. **Clone or Download** the repository:
-   ```bash
-   git clone https://github.com/AnaGVF/Travel_Poster_Creator.git
-   ```
-2. **Open `index.html`** in any modern browser:
-   * Double-click `index.html` or open via a local development server (e.g. VS Code Live Server).
+### 1. Clone the repository
+```bash
+git clone https://github.com/AnaGVF/Travel_Poster_Creator.git
+cd Travel_Poster_Creator
+```
 
----
-
-## 📖 How to Use
-
-1. **Customize Title & Dates**: Open the **Stationen & Poster verwalten** sidebar to update the poster title and subtitle.
-2. **Add & Edit Stations**: Search locations in the search box, click the map directly, or edit existing stops and dates in the list.
-3. **Adjust Aesthetics**: Tweak color saturation, contrast, brightness, or hillshade intensity to match your desired aesthetic.
-4. **Select Paper Format**: Pick your target dimensions (e.g., A4 or A3) from the format dropdown.
-5. **Export / Print**: Click **Poster speichern / drucken** to save as PDF or send directly to your printer.
+### 2. Run locally
+Open `index.html` directly in your browser:
+- **Option A**: Double-click `index.html` from your file explorer.
+- **Option B (Recommended)**: Use a lightweight local server (such as the VS Code Live Server extension or Python):
+  ```bash
+  # Using Python 3
+  python -m http.server 8000
+  ```
+  Then open:
+  ```text
+  http://localhost:8000
+  ```
 
 ---
 
@@ -82,16 +180,36 @@ No complex build pipeline or package installation required.
 
 ```text
 Travel_Poster_Creator/
-├── index.html        # Main HTML layout & top toolbar structure
-├── style.css         # Poster styling, pin aesthetics, & @media print rules
-├── script.js        # Leaflet map logic, session storage, i18n & controls
+├── index.html        # App layout, top navigation bar, and station drawer
+├── style.css         # Poster formatting, pin styles, sliders, and @media print rules
+├── script.js         # Leaflet map logic, OSRM routing, leg offsetting, i18n & storage
 └── README.md         # Project documentation
 ```
 
 ---
 
-## ⚖️ Credits & License
+## 🌐 Deployment
 
-* Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
-* Topographic relief tiles © [Esri](https://www.esri.com/).
-* Open source software distributed under the MIT License.
+The project is hosted and deployed automatically via **[GitHub Pages](https://pages.github.com/)**. Any update pushed to the `main` branch immediately updates the live production studio at:
+👉 **[https://anagvf.github.io/Travel_Poster_Creator/](https://anagvf.github.io/Travel_Poster_Creator/)**
+
+---
+
+## 👩‍💻 Author & Credits
+
+Created and maintained by:
+
+**Ana Graciela Vassallo Fedotkin**  
+- 🌐 **Live Website**: [https://anagvf.github.io/Travel_Poster_Creator/](https://anagvf.github.io/Travel_Poster_Creator/)  
+- 🐙 **GitHub**: [@AnaGVF](https://github.com/AnaGVF)  
+- 📁 **Repository**: [Travel_Poster_Creator](https://github.com/AnaGVF/Travel_Poster_Creator)
+
+---
+
+## 📄 License & Intellectual Property
+
+*Copyright © 2026 Ana Graciela Vassallo Fedotkin. All rights reserved.*  
+Personal project built with passion for travelers, road trippers, and cartography enthusiasts worldwide.
+
+- Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
+- Topographic relief tiles © [Esri](https://www.esri.com/).
