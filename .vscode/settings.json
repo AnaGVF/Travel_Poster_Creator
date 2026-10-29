@@ -1,0 +1,16 @@
+{
+  "scm.diffDecorations": "all",
+  "scm.diffDecorationsGutterWidth": 5,
+  "diffEditor.renderSideBySide": false,
+  "diffEditor.experimental.showMoves": true,
+  "workbench.colorCustomizations": {
+    "editorGutter.addedBackground": "#22c55e",
+    "editorGutter.modifiedBackground": "#3b82f6",
+    "editorGutter.deletedBackground": "#ef4444",
+    "diffEditor.insertedTextBackground": "#22c55e33",
+    "diffEditor.insertedLineBackground": "#22c55e25",
+    "diffEditor.removedTextBackground": "#ef444433",
+    "diffEditor.removedLineBackground": "#ef444425"
+  }
+}
+

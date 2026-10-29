@@ -326,6 +326,21 @@ html, body {
   gap: 12px;
 }
 
+
+/* Far right bottom edge application credit */
+.app-footer-credit {
+  position: fixed;
+  bottom: 8px;
+  right: 14px;
+  font-size: 11px;
+  color: #94a3b8;
+  letter-spacing: 0.3px;
+  z-index: 1000;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.85;
+}
+
 .btn {
   border: none;
   padding: 11px 18px;
@@ -820,6 +835,10 @@ input:checked + .slider:before {
 }
 
 /* Print Preparation Mode (Triggered before window.print) */
+body.preparing-print .app-footer-credit {
+  display: none !important;
+}
+
 body.preparing-print {
   overflow: visible !important;
 }
@@ -852,7 +871,7 @@ body.preparing-print #map {
 
 @media print {
   @page {
-    margin: 0 !important;
+    margin: 0;
   }
   * {
     -webkit-print-color-adjust: exact !important;
@@ -871,6 +890,7 @@ body.preparing-print #map {
   .app-top-navbar,
   .top-toolbar,
   .editor-sidebar,
+  .app-footer-credit,
   .app-header-brand {
     display: none !important;
   }

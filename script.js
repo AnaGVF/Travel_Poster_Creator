@@ -1371,13 +1371,45 @@ function escapeHtml(str) {
 
 let savedMapState = null;
 let isPreparingPrint = false;
+let lastScreenPosterWidth = 0;
+let lastScreenPosterHeight = 0;
+let currentPrintScale = 1;
+
+function trackScreenPosterDimensions() {
+  if (isPreparingPrint) return;
+  const container = document.querySelector('.page-container');
+  if (container && container.clientWidth > 0 && container.clientHeight > 0) {
+    lastScreenPosterWidth = container.clientWidth;
+    lastScreenPosterHeight = container.clientHeight;
+  }
+}
+
+function getPosterPrintDimensionsPx() {
+  const sizeSelect = document.getElementById('poster-size-select');
+  const fallback = { widthPx: 793.7, heightPx: 1122.5 };
+  if (!sizeSelect || !sizeSelect.options[sizeSelect.selectedIndex]) return fallback;
+  const opt = sizeSelect.options[sizeSelect.selectedIndex];
+  const mmW = parseFloat(opt.dataset.width || '210');
+  const mmH = parseFloat(opt.dataset.height || '297');
+  const pxPerMm = 96 / 25.4;
+  return {
+    widthPx: mmW * pxPerMm,
+    heightPx: mmH * pxPerMm
+  };
+}
 
 function prepareForPrint() {
   if (!map || isPreparingPrint) return;
   isPreparingPrint = true;
 
-  const container = document.querySelector('.page-container');
-  const screenWidth = container ? container.clientWidth : 800;
+  // Preserve exact on-screen poster dimensions before expanding canvas
+  trackScreenPosterDimensions();
+  const screenWidth = lastScreenPosterWidth || 600;
+
+  const { widthPx: targetPrintWidth } = getPosterPrintDimensionsPx();
+  const scale = screenWidth > 0 ? (targetPrintWidth / screenWidth) : 1;
+  const zoomOffset = Math.log2(scale);
+  const printZoom = map.getZoom() + zoomOffset;
 
   savedMapState = {
     center: map.getCenter(),
@@ -1385,23 +1417,14 @@ function prepareForPrint() {
     screenWidth: screenWidth
   };
 
-  document.body.classList.add('preparing-print');
-  map.invalidateSize({ pan: false });
-
-  // Calculate exact scale factor between screen preview and print dimensions
-  const printWidth = container ? container.clientWidth : screenWidth;
-  const scale = screenWidth > 0 ? (printWidth / screenWidth) : 1;
-  const zoomOffset = Math.log2(scale);
-  const printZoom = savedMapState.zoom + zoomOffset;
-
-  // Set CSS print scale variable so cards, pins, and fonts scale in exact 1:1 proportion
+  currentPrintScale = scale;
   document.documentElement.style.setProperty('--print-scale', scale.toFixed(4));
+  document.body.classList.add('preparing-print');
 
-  // Scale polyline stroke widths proportionally
-  if (outerPolyline) outerPolyline.setStyle({ weight: 5 * scale });
-  if (innerPolyline) innerPolyline.setStyle({ weight: 2.5 * scale, dashArray: `${6 * scale}, ${6 * scale}` });
+  map.invalidateSize({ pan: false });
+  updateTileOpacity();
 
-  // Preserve exact center and match scale so map does not zoom out or shift
+  // Set map view to exact center and compensated zoom level for print
   map.setView(savedMapState.center, printZoom, { animate: false });
   renderPoster(false);
 }
@@ -1409,12 +1432,9 @@ function prepareForPrint() {
 function cleanupAfterPrint() {
   if (!map || !isPreparingPrint) return;
   isPreparingPrint = false;
+  currentPrintScale = 1;
   document.body.classList.remove('preparing-print');
   document.documentElement.style.removeProperty('--print-scale');
-
-  // Restore polyline stroke widths
-  if (outerPolyline) outerPolyline.setStyle({ weight: 5 });
-  if (innerPolyline) innerPolyline.setStyle({ weight: 2.5, dashArray: '6, 6' });
 
   if (savedMapState) {
     map.invalidateSize({ pan: false });
@@ -1430,8 +1450,8 @@ function cleanupAfterPrint() {
 
 /**
  * High-quality print function.
- * Expands poster to full print dimensions, renders all tiles across the canvas,
- * and triggers window.print() before seamlessly restoring screen view.
+ * Expands poster to full print dimensions, pre-renders tiles across the print canvas,
+ * and triggers window.print(). Restores view cleanly when print dialog finishes.
  */
 function printPoster() {
   if (!map) {
@@ -1441,12 +1461,32 @@ function printPoster() {
 
   prepareForPrint();
 
-  // Give Leaflet tiles 350ms to load and render across the full print canvas
-  setTimeout(() => {
+  let hasPrinted = false;
+  const triggerPrint = () => {
+    if (hasPrinted) return;
+    hasPrinted = true;
+    if (mapTileLayer) mapTileLayer.off('load', triggerPrint);
     window.print();
-    // Safety fallback in case afterprint does not fire in some browsers
+  };
+
+  // Wait for high-resolution tiles across the print canvas to load before launching dialog
+  if (mapTileLayer) {
+    mapTileLayer.once('load', () => {
+      setTimeout(triggerPrint, 120);
+    });
+  }
+
+  // Fallback timeout in case tiles are pre-cached or network takes longer
+  setTimeout(triggerPrint, 500);
+
+  // Fallback cleanup if afterprint is not supported by the browser:
+  // ONLY triggers after user closes print dialog and refocuses the window
+  const onWindowRefocus = () => {
     setTimeout(() => {
-      cleanupAfterPrint();
-    }, 1500);
-  }, 350);
+      if (isPreparingPrint) {
+        cleanupAfterPrint();
+      }
+    }, 400);
+  };
+  window.addEventListener('focus', onWindowRefocus, { once: true });
 }
