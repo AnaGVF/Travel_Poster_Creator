@@ -18,6 +18,10 @@
   <img src="https://img.shields.io/badge/Privacy-100%25%20In--Browser-10B981?style=for-the-badge" alt="Privacy First" />
 </p>
 
+<p align="center">
+  <img src="assets/preview.jpg" alt="Travel Poster Creator Studio Preview" width="100%" />
+</p>
+
 ---
 
 ## 💡 Why Travel Poster Creator?
@@ -173,6 +177,7 @@ cd Travel_Poster_Creator
 
 ```text
 Travel_Poster_Creator/
+├── assets/           # UI screenshots and preview assets
 ├── index.html        # App layout, top navigation bar, and station drawer
 ├── style.css         # Poster formatting, pin styles, sliders, and @media print rules
 ├── script.js         # Leaflet map logic, OSRM routing, leg offsetting, i18n & storage
